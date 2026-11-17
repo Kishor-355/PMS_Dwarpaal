@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+.vite/
+.nuxt/
+.svelte-kit/
+coverage/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+.netrc
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Logs / caches
+*.log
+npm-debug.log*
+yarn-error.log*
+.cache/
+.eslintcache
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Misc
+tmp/
+.tmp/
+
+# Practice rig runtime artefacts (generated, never commit)
+practice/rig.db
+practice/rig.db-wal
+practice/rig.db-shm
+practice/out/
+dist/

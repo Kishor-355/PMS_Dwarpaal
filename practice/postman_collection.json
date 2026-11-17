@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "Practice rig — PMS integration",
+    "description": "Poke the fake Dwarpaal API by hand. Basic auth: alice / test123. Start the rig first: python3 practice/run_demo.py",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "authId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "00 health (no auth)",
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/healthz" }
+    },
+    {
+      "name": "01 unauthorised POST (expect 401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/pms?source=openhotel",
+        "body": { "mode": "raw", "raw": "{}" }
+      }
+    },
+    {
+      "name": "02 create reservation (expect 200)",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/pms?source=openhotel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"updatePerson\": true,\n  \"person\": [{\n    \"name\": \"Test Guest\",\n    \"externalId\": \"EXT1001\",\n    \"entityType\": \"GUEST\",\n    \"contactDetails\": { \"PP\": \"+919000000001\", \"PE\": \"guest@example.test\", \"FN\": \"Test\", \"LN\": \"Guest\" }\n  }],\n  \"event\": {\n    \"eventType\": \"reservationcreate\",\n    \"bookingId\": \"POSTMAN-01\",\n    \"bookingRoomId\": \"POSTMAN-01R\",\n    \"arrivalDate\": \"2026-11-17T10:00:00.000Z\",\n    \"departureDate\": \"2026-11-19T10:00:00.000Z\"\n  },\n  \"unit\": [{ \"extRoomId\": \"609520\", \"extRoomNumber\": \"204\", \"extLocationId\": \"238462\" }],\n  \"notify\": true,\n  \"notification\": { \"email\": true, \"mobile\": true }\n}"
+        }
+      }
+    },
+    {
+      "name": "03 find auth entry by booking id",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [],
+        "url": "{{baseUrl}}/findauthentry?authStatus=A&extEventId=POSTMAN-01"
+      }
+    },
+    {
+      "name": "04 device chars + communication for authId",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [],
+        "url": "{{baseUrl}}/authentry/devicechars/notification?authId={{authId}}"
+      }
+    },
+    {
+      "name": "05 modify to another room (expect old key revoked)",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/pms?source=openhotel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"person\": [{ \"contactDetails\": { \"PP\": \"+919000000001\", \"PE\": \"guest@example.test\" } }],\n  \"event\": {\n    \"eventType\": \"reservationModify\",\n    \"bookingId\": \"POSTMAN-01\",\n    \"bookingRoomId\": \"POSTMAN-01R\",\n    \"arrivalDate\": \"2026-11-18T10:00:00.000Z\",\n    \"departureDate\": \"2026-11-20T10:00:00.000Z\"\n  },\n  \"unit\": [{ \"extRoomId\": \"609521\", \"extRoomNumber\": \"210\", \"extLocationId\": \"238462\" }],\n  \"notify\": true,\n  \"notification\": { \"email\": true, \"mobile\": true }\n}"
+        }
+      }
+    },
+    {
+      "name": "06 unknown room (expect 422)",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/pms?source=openhotel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"person\": [{ \"contactDetails\": { \"PP\": \"+919000000001\", \"PE\": \"guest@example.test\" } }],\n  \"event\": { \"eventType\": \"reservationcreate\", \"bookingId\": \"POSTMAN-02\", \"bookingRoomId\": \"POSTMAN-02R\", \"arrivalDate\": \"2026-11-17T10:00:00.000Z\", \"departureDate\": \"2026-11-19T10:00:00.000Z\" },\n  \"unit\": [{ \"extRoomId\": \"999999\", \"extRoomNumber\": \"999\" }],\n  \"notify\": true,\n  \"notification\": { \"email\": true, \"mobile\": true }\n}"
+        }
+      }
+    },
+    {
+      "name": "07 notify=false (expect 0 communication rows)",
+      "request": {
+        "method": "POST",
+        "auth": { "type": "basic", "basic": [{ "key": "username", "value": "alice" }, { "key": "password", "value": "test123" }] },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/pms?source=openhotel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"person\": [{ \"contactDetails\": { \"PP\": \"+919000000001\", \"PE\": \"guest@example.test\" } }],\n  \"event\": { \"eventType\": \"reservationcreate\", \"bookingId\": \"POSTMAN-03\", \"bookingRoomId\": \"POSTMAN-03R\", \"arrivalDate\": \"2026-11-17T10:00:00.000Z\", \"departureDate\": \"2026-11-19T10:00:00.000Z\" },\n  \"unit\": [{ \"extRoomId\": \"609518\", \"extRoomNumber\": \"101\" }],\n  \"notify\": false,\n  \"notification\": { \"email\": true, \"mobile\": true }\n}"
+        }
+      }
+    }
+  ]
+}

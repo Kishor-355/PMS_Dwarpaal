@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<!--
+  DOWNLOADED FROM GOOGLE DRIVE — how to use
+  ---------------------------------------------------------------
+  1. Download this file (Drive may add .txt or show it as text).
+  2. Rename it so it ends with  .html   e.g.  PMS-Practice-Rig.html
+  3. Double-click it. It opens in your browser. No server, no install.
+  4. Left column = 6 guided steps. Run them in order, watch the tables.
+  5. Press "Run the harness" for 27 checks. Then pick a bug in
+     "Break it on purpose" and run again to watch checks go red.
+-->
+
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PMS Practice Rig — standalone (no server)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --ink:#e6e9ef; --muted:#98a1b3; --accent:#4f8cff; --ok:#38b27a;
+    --bad:#e05561; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  header h1{font-size:15px;margin:0;font-weight:600}
+  header .sub{color:var(--muted);font-size:12px}
+  .pill{margin-left:auto;font-size:12px;color:var(--muted)}
+  main{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 53px)}
+  nav{border-right:1px solid var(--line);background:var(--panel);padding:14px 10px}
+  nav h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 8px 6px}
+  .step{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;color:var(--ink);padding:8px 9px;border-radius:8px;cursor:pointer;margin-bottom:3px;font-size:13px}
+  .step:hover{background:var(--panel2)}
+  .step.done{border-color:var(--ok);background:rgba(56,178,122,.08)}
+  .step .n{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--line);text-align:center;font-size:11px;line-height:18px;margin-right:8px;font-family:var(--mono)}
+  .step small{display:block;color:var(--muted);font-size:11px;margin-left:26px}
+  section{padding:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px}
+  .card h3{margin:0 0 5px;font-size:13px}
+  .why{color:var(--muted);font-size:12px;margin-bottom:10px}
+  .explain{background:linear-gradient(180deg,var(--panel2),var(--panel));border-left:3px solid var(--accent)}
+  .mr{margin:8px 0 0;color:#cfd6e4;font-size:13px}
+  pre{margin:10px 0 0;background:#0b0d11;border:1px solid var(--line);border-radius:8px;padding:11px;overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.5;max-height:300px}
+  .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:13px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;padding:5px 7px;border-bottom:1px solid var(--line)}
+  td{padding:5px 7px;border-bottom:1px solid rgba(42,47,58,.6);font-family:var(--mono);font-size:11px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  tr.flash td{animation:flash 1.8s ease-out}
+  @keyframes flash{0%{background:rgba(79,140,255,.4)}100%{background:transparent}}
+  .badge{display:inline-block;padding:1px 6px;border-radius:999px;font-size:10px;font-family:var(--mono)}
+  .ACTIVE,.A,.OK{background:rgba(56,178,122,.16);color:#6fdcae;border:1px solid rgba(56,178,122,.4)}
+  .REVOKED,.I{background:rgba(224,85,97,.16);color:#ff9aa2;border:1px solid rgba(224,85,97,.4)}
+  .empty{color:var(--muted);font-size:12px;padding:12px 6px;font-style:italic}
+  .controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  button.act{background:var(--accent);color:#06101f;border:0;border-radius:8px;padding:8px 13px;font-weight:600;font-size:13px;cursor:pointer}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12.5px;width:100%}
+  .verdict{display:flex;gap:12px;align-items:center;padding:11px 13px;border-radius:9px;border:1px solid var(--line);background:var(--panel2)}
+  .verdict.pass{border-color:rgba(56,178,122,.5);background:rgba(56,178,122,.08)}
+  .verdict.fail{border-color:rgba(224,85,97,.5);background:rgba(224,85,97,.08)}
+  .verdict b{font-size:19px}
+  .checks{max-height:300px;overflow:auto}
+  .chk{display:grid;grid-template-columns:66px 1fr 86px;gap:9px;padding:4px 0;border-bottom:1px solid rgba(42,47,58,.5);font-size:12px;align-items:center}
+  .chk .id{font-family:var(--mono);color:var(--muted);font-size:10.5px}
+  .chk .res{text-align:right;font-family:var(--mono);font-size:10.5px}
+  .chk.pass .res{color:var(--ok)} .chk.fail .res{color:var(--bad);font-weight:700}
+  .chk .exp{display:block;color:var(--muted);font-size:10px;font-family:var(--mono)}
+  .hint{color:var(--muted);font-size:11.5px;margin-top:8px}
+  @media(max-width:880px){main{grid-template-columns:1fr}nav{border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PMS Practice Rig</h1>
+  <span class="sub">standalone — everything runs in this file, no server</span>
+  <span class="pill" id="modeLabel">break mode: none</span>
+</header>
+
+<main>
+  <nav>
+    <h2>Guided tour</h2>
+    <button class="step" data-step="1">Create a booking<small>one event → one auth row</small></button>
+    <button class="step" data-step="2">Guest checks in<small>access becomes usable</small></button>
+    <button class="step" data-step="3">Room 204 → 210<small>old key must die</small></button>
+    <button class="step" data-step="4">Guest checks out<small>every key revoked</small></button>
+    <button class="step" data-step="5">notify = false<small>negative case</small></button>
+    <button class="step" data-step="6">Send it twice<small>idempotency</small></button>
+    <h2 style="margin-top:16px">Tools</h2>
+    <button class="step" id="btnHarness">▶ Run the harness<small>all checks, then report</small></button>
+    <button class="step" id="btnReset">↺ Reset tables<small>start clean</small></button>
+    <h2 style="margin-top:16px">Break it on purpose</h2>
+    <select id="breakSelect"></select>
+    <p class="hint">Select a bug, then run the harness and watch which check goes red.</p>
+  </nav>
+
+  <section>
+    <div class="card explain">
+      <h3 id="explainTitle">Start here</h3>
+      <div class="why" id="explainWhy">Click a step on the left. Each one is a single PMS event.</div>
+      <p class="mr" id="explainMr">डावीकडून 1, 2, 3… क्रमाने जा. खाली खरे tables आहेत — नोंदी येताना डोळ्यांनी बघ.</p>
+      <div class="controls" style="margin-top:12px">
+        <button class="act" id="btnRunStep">Run this step</button>
+        <button class="act ghost" id="btnNext">Next step →</button>
+      </div>
+      <pre id="trace" hidden></pre>
+    </div>
+
+    <div class="tables">
+      <div class="card"><h3>Events received</h3><div class="why">What the PMS sent. Rig-only table, so the input is visible.</div><div id="tblEvents"></div></div>
+      <div class="card"><h3>DP_AUTH_ENTRY</h3><div class="why">Who is authorised: booking, room, dates, status.</div><div id="tblAuth"></div></div>
+      <div class="card"><h3>DP_AUTH_DEVICE_CHARS</h3><div class="why">Which keycode sits on which lock. ACTIVE works, REVOKED is dead.</div><div id="tblChars"></div></div>
+      <div class="card"><h3>DP_COMMUNICATION_LOG</h3><div class="why">What the guest was told. Zero rows is correct when notify=false.</div><div id="tblComms"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>Harness result</h3>
+      <div class="why">Same events, replayed by the harness, then checked one assertion at a time.</div>
+      <div id="harnessOut"><div class="empty">Not run yet. Press “Run the harness”.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   This file is the whole system in one page. The real project
+   has these pieces in separate files; here they are together so
+   the page works with no server and no install.
+   ============================================================ */
+
+const ROOMS = {
+  "609518": {number:"101", device:"LOCK-101"},
+  "609519": {number:"102", device:"LOCK-102"},
+  "609520": {number:"204", device:"LOCK-204"},
+  "609521": {number:"210", device:"LOCK-210"},
+};
+const VALID_EVENTS = ["reservationcreate","reservationcheckin","reservationModify","reservationcheckout"];
+
+const BREAK_MODES = [
+  {mode:"none", description:"no bug injected"},
+  {mode:"room_change_no_revoke", description:"modify keeps the old room's key alive"},
+  {mode:"notify_ignored", description:"sends even when notify=false"},
+  {mode:"dates_not_updated", description:"modify ignores the new dates"},
+  {mode:"duplicate_double_key", description:"a replayed event issues a second key"},
+];
+
+const DB = { DP_AUTH_ENTRY:[], DP_AUTH_DEVICE_CHARS:[], DP_COMMUNICATION_LOG:[], RIG_EVENTS:[] };
+let SEQ = 0;
+let breakMode = "none";
+
+const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/,".000Z");
+const uid = p => p + "-" + Math.random().toString(16).slice(2,10);
+
+function buildEvent(type, opts = {}) {
+  const roomId = opts.roomId || "609520";
+  const arrival = opts.arrival || new Date(Date.now() + 30*60000);
+  const departure = opts.departure || new Date(arrival.getTime() + 2*86400000);
+  return {
+    updatePerson:true,
+    person:[{ name:"Test Guest", externalId:"EXT1001", entityType:"GUEST",
+              contactDetails:{ PP:"+919000000001", PE:"guest@example.test", FN:"Test", LN:"Guest" }}],
+    event:{ eventType:type,
+            bookingId: opts.bookingId || ("RIG-" + (++SEQ)),
+            bookingRoomId: (opts.bookingRoomId || ("RIGR-" + SEQ)),
+            arrivalDate: arrival.toISOString().replace(/\.\d{3}Z$/,".000Z"),
+            departureDate: departure.toISOString().replace(/\.\d{3}Z$/,".000Z") },
+    unit:[{ extRoomId:roomId, extRoomNumber:ROOMS[roomId].number, extLocationId:"238462" }],
+    notify: opts.notify !== undefined ? opts.notify : true,
+    notification:{ email:true, mobile:true },
+  };
+}
+
+/* ---- the "framework": event in, rows out ---- */
+function processEvent(payload) {
+  const trace = [];
+  const event = payload.event || {};
+  const unit = (payload.unit || [])[0];
+  const type = event.eventType;
+
+  if (!VALID_EVENTS.includes(type)) return {status:422, error:{code:"UNKNOWN_EVENT", message:"bad eventType"}};
+  if (!unit) return {status:422, error:{code:"NO_UNIT", message:"no unit[]"}};
+  const roomId = String(unit.extRoomId);
+  if (!ROOMS[roomId]) return {status:422, error:{code:"UNKNOWN_ROOM", message:`extRoomId ${roomId} is not mapped to a lock`}};
+
+  // idempotency: identical payload already seen?
+  const canonical = JSON.stringify(sortKeys(payload));
+  if (breakMode !== "duplicate_double_key") {
+    const replay = DB.RIG_EVENTS.find(r => r._canonical === canonical);
+    if (replay) {
+      const existing = findEntry(event.bookingId, event.bookingRoomId);
+      return {status:200, body:{result:"IGNORED_DUPLICATE", authId: existing ? existing.AUTH_ID : null},
+              trace:["duplicate payload ignored (idempotent)"]};
+    }
+  }
+
+  DB.RIG_EVENTS.push({ ID: DB.RIG_EVENTS.length+1, EVENT_TYPE:type, BOOKING_ID:event.bookingId,
+                       NOTIFY: payload.notify ? 1 : 0, RECEIVED_AT: nowIso(), _canonical: canonical });
+
+  const entry = findEntry(event.bookingId, event.bookingRoomId);
+  const stamp = nowIso();
+
+  if (type === "reservationcreate") {
+    let authId;
+    if (entry) {
+      authId = entry.AUTH_ID;
+      Object.assign(entry, {ROOM_ID:roomId, ROOM_NUMBER:ROOMS[roomId].number,
+        ARRIVAL_DATE:event.arrivalDate, DEPARTURE_DATE:event.departureDate, AUTH_STATUS:"A", UPDATED_DATE:stamp});
+      trace.push("auth entry already existed — updated");
+    } else {
+      authId = uid("a");
+      DB.DP_AUTH_ENTRY.push({ AUTH_ID:authId, EXT_EVENT_ID:event.bookingId, BOOKING_ROOM_ID:event.bookingRoomId,
+        ROOM_ID:roomId, ROOM_NUMBER:ROOMS[roomId].number, ARRIVAL_DATE:event.arrivalDate,
+        DEPARTURE_DATE:event.departureDate, AUTH_STATUS:"A", CREATED_DATE:stamp, UPDATED_DATE:stamp });
+      trace.push(`auth entry created (${authId})`);
+    }
+    grantKey(authId, roomId);
+    trace.push(`key granted on ${ROOMS[roomId].device}`);
+    notifyGuest(authId, payload, type, trace);
+    return {status:200, body:{result:"OK", authId, eventType:type}, trace};
+  }
+
+  if (!entry) return {status:409, error:{code:"NO_BOOKING", message:`${type} arrived before any create`}};
+  const authId = entry.AUTH_ID;
+
+  if (type === "reservationcheckin") {
+    entry.AUTH_STATUS = "A"; entry.UPDATED_DATE = stamp;
+    grantKey(authId, entry.ROOM_ID);
+    trace.push("auth entry confirmed active");
+  }
+
+  if (type === "reservationModify") {
+    const oldRoom = entry.ROOM_ID;
+    entry.ROOM_ID = roomId;
+    entry.ROOM_NUMBER = ROOMS[roomId].number;
+    if (breakMode !== "dates_not_updated") {
+      entry.ARRIVAL_DATE = event.arrivalDate;
+      entry.DEPARTURE_DATE = event.departureDate;
+      trace.push("dates updated");
+    } else {
+      trace.push("BREAK: dates ignored");
+    }
+    entry.UPDATED_DATE = stamp;
+    trace.push(`auth entry updated to room ${roomId}`);
+    if (oldRoom !== roomId) {
+      const keep = breakMode === "room_change_no_revoke" ? ROOMS[oldRoom].device : null;
+      const revoked = revokeKeys(authId, keep);
+      trace.push(breakMode === "room_change_no_revoke"
+        ? `BREAK: old room ${oldRoom} key NOT revoked`
+        : `old room ${oldRoom} key revoked (${revoked})`);
+      grantKey(authId, roomId);
+      trace.push(`new key granted on ${ROOMS[roomId].device}`);
+    }
+  }
+
+  if (type === "reservationcheckout") {
+    entry.AUTH_STATUS = "I"; entry.UPDATED_DATE = stamp;
+    const revoked = revokeKeys(authId, null);
+    trace.push(`auth entry inactive; ${revoked} key(s) revoked`);
+  }
+
+  notifyGuest(authId, payload, type, trace);
+  return {status:200, body:{result:"OK", authId, eventType:type}, trace};
+}
+
+function sortKeys(o) {
+  if (Array.isArray(o)) return o.map(sortKeys);
+  if (o && typeof o === "object") {
+    const out = {};
+    Object.keys(o).sort().forEach(k => out[k] = sortKeys(o[k]));
+    return out;
+  }
+  return o;
+}
+function findEntry(bookingId, bookingRoomId) {
+  return DB.DP_AUTH_ENTRY.find(r => r.EXT_EVENT_ID === bookingId && r.BOOKING_ROOM_ID === bookingRoomId);
+}
+function grantKey(authId, roomId) {
+  const device = ROOMS[roomId].device;
+  const live = DB.DP_AUTH_DEVICE_CHARS.find(c => c.AUTH_ID===authId && c.DEVICE_ID===device && c.CHAR_STATUS==="ACTIVE");
+  if (live && breakMode !== "duplicate_double_key") return;
+  const stamp = nowIso();
+  DB.DP_AUTH_DEVICE_CHARS.push({ ID: DB.DP_AUTH_DEVICE_CHARS.length+1, AUTH_ID:authId, DEVICE_ID:device,
+    DEVICE_CHAR: String(100000 + Math.floor(Math.random()*899999)), CHAR_STATUS:"ACTIVE",
+    CREATED_DATE:stamp, UPDATED_DATE:stamp });
+}
+function revokeKeys(authId, keepDevice) {
+  let n = 0;
+  DB.DP_AUTH_DEVICE_CHARS.forEach(c => {
+    if (c.AUTH_ID===authId && c.CHAR_STATUS==="ACTIVE" && c.DEVICE_ID !== keepDevice) {
+      c.CHAR_STATUS = "REVOKED"; c.UPDATED_DATE = nowIso(); n++;
+    }
+  });
+  return n;
+}
+function notifyGuest(authId, payload, type, trace) {
+  if (!payload.notify && breakMode !== "notify_ignored") { trace.push("0 notification row(s) written"); return; }
+  const stamp = nowIso();
+  let n = 0;
+  (payload.person || []).forEach(p => {
+    const d = p.contactDetails || {};
+    if (payload.notification.mobile) { DB.DP_COMMUNICATION_LOG.push({ID:DB.DP_COMMUNICATION_LOG.length+1,AUTH_ID:authId,CHANNEL:"SMS",RECIPIENT:d.PP,STATUS:"SENT",EVENT_TYPE:type,CREATED_DATE:stamp}); n++; }
+    if (payload.notification.email)  { DB.DP_COMMUNICATION_LOG.push({ID:DB.DP_COMMUNICATION_LOG.length+1,AUTH_ID:authId,CHANNEL:"EMAIL",RECIPIENT:d.PE,STATUS:"SENT",EVENT_TYPE:type,CREATED_DATE:stamp}); n++; }
+  });
+  trace.push(`${n} notification row(s) written`);
+}
+
+/* ---- the harness: assertions as data ---- */
+function runHarness() {
+  const scenarios = [];
+  DB.DP_AUTH_ENTRY.length = 0; DB.DP_AUTH_DEVICE_CHARS.length = 0;
+  DB.DP_COMMUNICATION_LOG.length = 0; DB.RIG_EVENTS.length = 0;
+
+  const booking = "RIG-RUN-" + Date.now().toString().slice(-6);
+  const bookingRoom = booking + "R";
+  const checks = () => [];
+  const add = (arr, id, desc, expected, actual) =>
+    arr.push({id, description:desc, expected, actual, passed: JSON.stringify(expected)===JSON.stringify(actual)});
+
+  // A1 create
+  let chk = [];
+  let r = processEvent(buildEvent("reservationcreate", {bookingId:booking, bookingRoomId:bookingRoom}));
+  add(chk,"A1.1","POST returns 200",200,r.status);
+  add(chk,"A1.2","framework reports OK","OK",r.body && r.body.result);
+  let entry = findEntry(booking, bookingRoom) || {};
+  add(chk,"A1.3","auth entry is active","A",entry.AUTH_STATUS);
+  add(chk,"A1.4","auth entry holds the replayed room","204",entry.ROOM_NUMBER);
+  const active1 = DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===entry.AUTH_ID && c.CHAR_STATUS==="ACTIVE");
+  add(chk,"A1.5","exactly one active key",1,active1.length);
+  add(chk,"A1.6","key sits on the room's lock","LOCK-204",active1[0] && active1[0].DEVICE_ID);
+  const comms1 = DB.DP_COMMUNICATION_LOG.filter(c=>c.AUTH_ID===entry.AUTH_ID);
+  add(chk,"A1.7","SMS + EMAIL logged",2,comms1.length);
+  scenarios.push({name:"A1 create", passed: chk.every(c=>c.passed), checks: chk});
+
+  // A2 checkin
+  chk = [];
+  r = processEvent(buildEvent("reservationcheckin", {bookingId:booking, bookingRoomId:bookingRoom}));
+  add(chk,"A2.1","POST returns 200",200,r.status);
+  const active2 = DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===entry.AUTH_ID && c.CHAR_STATUS==="ACTIVE");
+  add(chk,"A2.2","still exactly one active key",1,active2.length);
+  scenarios.push({name:"A2 check-in", passed: chk.every(c=>c.passed), checks: chk});
+
+  // A3 modify with room change
+  chk = [];
+  const beforeDates = {a:entry.ARRIVAL_DATE, d:entry.DEPARTURE_DATE};
+  const modPayload = buildEvent("reservationModify", {bookingId:booking, bookingRoomId:bookingRoom, roomId:"609521",
+    arrival: new Date(Date.now() + 3*86400000), departure: new Date(Date.now() + 5*86400000)});
+  r = processEvent(modPayload);
+  add(chk,"A3.1","POST returns 200",200,r.status);
+  entry = findEntry(booking, bookingRoom) || {};
+  add(chk,"A3.2","auth entry points at the new room","210",entry.ROOM_NUMBER);
+  const active3 = DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===entry.AUTH_ID && c.CHAR_STATUS==="ACTIVE");
+  const oldLock = DB.DP_AUTH_DEVICE_CHARS.find(c=>c.AUTH_ID===entry.AUTH_ID && c.DEVICE_ID==="LOCK-204");
+  add(chk,"A3.3","old lock key is REVOKED","REVOKED",oldLock && oldLock.CHAR_STATUS);
+  add(chk,"A3.4","exactly one active key",1,active3.length);
+  add(chk,"A3.5","active key is on the NEW lock","LOCK-210",active3[0] && active3[0].DEVICE_ID);
+  add(chk,"A3.6","no ACTIVE key left on the old lock",0,
+      DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===entry.AUTH_ID && c.DEVICE_ID==="LOCK-204" && c.CHAR_STATUS==="ACTIVE").length);
+  add(chk,"A3.7","modify moved the stored arrival date",modPayload.event.arrivalDate,entry.ARRIVAL_DATE);
+  add(chk,"A3.8","modify moved the stored departure date",modPayload.event.departureDate,entry.DEPARTURE_DATE);
+  scenarios.push({name:"A3 modify (room change)", passed: chk.every(c=>c.passed), checks: chk});
+
+  // A4 checkout
+  chk = [];
+  r = processEvent(buildEvent("reservationcheckout", {bookingId:booking, bookingRoomId:bookingRoom, roomId:"609521"}));
+  add(chk,"A4.1","POST returns 200",200,r.status);
+  entry = findEntry(booking, bookingRoom) || {};
+  add(chk,"A4.2","auth entry is inactive","I",entry.AUTH_STATUS);
+  add(chk,"A4.3","no key is still ACTIVE",0,
+      DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===entry.AUTH_ID && c.CHAR_STATUS==="ACTIVE").length);
+  scenarios.push({name:"A4 check-out", passed: chk.every(c=>c.passed), checks: chk});
+
+  // A5 negative: notify=false
+  chk = [];
+  const quiet = buildEvent("reservationcreate", {notify:false});
+  quiet.notification = { email:true, mobile:true };  // realistic regression: master flag off
+  const qb = quiet.event.bookingId;
+  r = processEvent(quiet);
+  const qEntry = findEntry(qb, quiet.event.bookingRoomId) || {};
+  add(chk,"A5.1","POST returns 200",200,r.status);
+  add(chk,"A5.2","access granted anyway","A",qEntry.AUTH_STATUS);
+  add(chk,"A5.3","no SMS/EMAIL rows when notify=false",0,
+      DB.DP_COMMUNICATION_LOG.filter(c=>c.AUTH_ID===qEntry.AUTH_ID).length);
+  scenarios.push({name:"A5 negative (notify=false)", passed: chk.every(c=>c.passed), checks: chk});
+
+  // A6 idempotency
+  chk = [];
+  const dup = buildEvent("reservationcreate");
+  const d1 = processEvent(dup), d2 = processEvent(dup);
+  const dEntry = findEntry(dup.event.bookingId, dup.event.bookingRoomId) || {};
+  add(chk,"A6.1","first delivery accepted",200,d1.status);
+  add(chk,"A6.2","replay acknowledged without error",200,d2.status);
+  add(chk,"A6.3","replay did not issue a second key",1,
+      DB.DP_AUTH_DEVICE_CHARS.filter(c=>c.AUTH_ID===dEntry.AUTH_ID && c.CHAR_STATUS==="ACTIVE").length);
+  add(chk,"A6.4","replay did not duplicate notifications",2,
+      DB.DP_COMMUNICATION_LOG.filter(c=>c.AUTH_ID===dEntry.AUTH_ID).length);
+  scenarios.push({name:"A6 idempotency (duplicate delivery)", passed: chk.every(c=>c.passed), checks: chk});
+
+  const all = scenarios.flatMap(s=>s.checks);
+  return { scenarios,
+           summary:{ total: all.length, passed: all.filter(c=>c.passed).length,
+                     failed: all.filter(c=>!c.passed).length } };
+}
+
+/* ---- UI ---- */
+const STEPS = {
+  1:{t:"1 — Reservation created", w:"The PMS says a booking exists. Expect one auth row, one ACTIVE key, SMS+EMAIL.",
+     mr:"बुकिंग तयार. अपेक्षा: auth entry एक, ACTIVE key एक, SMS+EMAIL दोन नोंदी."},
+  2:{t:"2 — Guest checks in", w:"The guest arrived. A booking already existed, so no second key may appear.",
+     mr:"पाहुणा आला. बुकिंग आधीच होती, म्हणून दुसरी key तयार होऊ नये."},
+  3:{t:"3 — Room changed 204 → 210", w:"The most important behaviour. Old room's key must be REVOKED, new one placed on the new lock.",
+     mr:"हाच सर्वात महत्त्वाचा भाग. जुन्या खोलीची key REVOKED, नव्या खोलीवर नवी key."},
+  4:{t:"4 — Guest checks out", w:"Access ends. Status becomes I and every key is REVOKED.",
+     mr:"मुक्काम संपला. status I, सगळ्या keys REVOKED."},
+  5:{t:"5 — notify = false", w:"Access is still granted, but the guest must not be contacted. Communication log stays empty.",
+     mr:"access मिळतो, पण पाहुण्याला काही कळवायचं नाही — communication log रिकामा."},
+  6:{t:"6 — The same event, sent twice", w:"Kafka is at-least-once. A replay must not issue a second key or double the messages.",
+     mr:"Kafka मध्ये तोच message दोनदा येतो. पुन्हा आला तर दुसरी key होऊ नये."},
+};
+const $ = s => document.querySelector(s);
+let current = 1;
+
+function badge(v){ return `<span class="badge ${v}">${v}</span>`; }
+function table(rows, cols, badgeCols=[]) {
+  if (!rows.length) return `<div class="empty">no rows</div>`;
+  return `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(r=>`<tr class="${r._new?"flash":""}">` +
+      cols.map(c=>`<td>${badgeCols.includes(c)?badge(r[c]):String(r[c]??"").replace(/</g,"&lt;")}</td>`).join("") +
+      `</tr>`).join("") + `</tbody></table>`;
+}
+function render(newIds = []) {
+  $("#tblEvents").innerHTML = table(DB.RIG_EVENTS.slice().reverse().map(r=>({...r})), ["EVENT_TYPE","BOOKING_ID","NOTIFY","RECEIVED_AT"]);
+  $("#tblAuth").innerHTML   = table(DB.DP_AUTH_ENTRY.map(r=>({...r,_new:newIds.includes(r.AUTH_ID)})), ["AUTH_ID","EXT_EVENT_ID","ROOM_NUMBER","AUTH_STATUS","ARRIVAL_DATE"], ["AUTH_STATUS"]);
+  $("#tblChars").innerHTML  = table(DB.DP_AUTH_DEVICE_CHARS.map(r=>({...r,_new:newIds.includes(r.AUTH_ID)})), ["DEVICE_ID","DEVICE_CHAR","CHAR_STATUS"], ["CHAR_STATUS"]);
+  $("#tblComms").innerHTML  = table(DB.DP_COMMUNICATION_LOG.map(r=>({...r,_new:newIds.includes(r.AUTH_ID)})), ["CHANNEL","RECIPIENT","EVENT_TYPE"]);
+}
+
+function showStep(n){
+  current = n;
+  const s = STEPS[n];
+  $("#explainTitle").textContent = s.t;
+  $("#explainWhy").textContent = s.w;
+  $("#explainMr").textContent = s.mr;
+  document.querySelectorAll(".step[data-step]").forEach(b=>b.classList.toggle("done", Number(b.dataset.step) < n));
+}
+
+function runStep(n){
+  const authBefore = new Set(DB.DP_AUTH_ENTRY.map(r=>r.AUTH_ID));
+  let payloads = [];
+  const demo = "RIG-DEMO-01", demoR = "RIG-DEMO-01R";
+  if (n===1) payloads = [["create 204", buildEvent("reservationcreate",{bookingId:demo,bookingRoomId:demoR,roomId:"609520"})]];
+  if (n===2) payloads = [["check-in", buildEvent("reservationcheckin",{bookingId:demo,bookingRoomId:demoR,roomId:"609520"})]];
+  if (n===3) payloads = [["modify 204 -> 210", buildEvent("reservationModify",{bookingId:demo,bookingRoomId:demoR,roomId:"609521"})]];
+  if (n===4) payloads = [["check-out", buildEvent("reservationcheckout",{bookingId:demo,bookingRoomId:demoR,roomId:"609521"})]];
+  if (n===5) { const q = buildEvent("reservationcreate",{bookingId:"RIG-DEMO-02",bookingRoomId:"RIG-DEMO-02R",roomId:"609518",notify:false});
+               payloads = [["create with notify=false", q]]; }
+  if (n===6) { const same = buildEvent("reservationcreate",{bookingId:"RIG-DEMO-03",bookingRoomId:"RIG-DEMO-03R",roomId:"609519"});
+               payloads = [["first delivery", same], ["identical replay", same]]; }
+
+  const lines = payloads.map(([label, p]) => {
+    const r = processEvent(p);
+    if (r.error) return `${label}: HTTP ${r.status} — ${r.error.code}\n   ${r.error.message}`;
+    return `${label}: HTTP ${r.status} — ${r.body.result}\n   ` + r.trace.join("\n   ");
+  }).join("\n");
+
+  const fresh = DB.DP_AUTH_ENTRY.map(r=>r.AUTH_ID).filter(id=>!authBefore.has(id));
+  render(fresh);
+  const pre = $("#trace"); pre.hidden = false; pre.textContent = lines;
+  showStep(Math.min(n+1,6));
+}
+
+$("#breakSelect").innerHTML = BREAK_MODES.map(m=>`<option value="${m.mode}">${m.description}</option>`).join("");
+$("#breakSelect").onchange = e => {
+  breakMode = e.target.value;
+  $("#modeLabel").textContent = "break mode: " + (breakMode==="none" ? "none" : breakMode);
+};
+
+document.querySelectorAll(".step[data-step]").forEach(b=>{
+  b.onclick = () => { showStep(Number(b.dataset.step)); runStep(Number(b.dataset.step)); };
+});
+$("#btnRunStep").onclick = () => runStep(current);
+$("#btnNext").onclick = () => runStep(current);
+$("#btnReset").onclick = () => {
+  Object.values(DB).forEach(a=>a.length=0); SEQ=0;
+  $("#trace").hidden = true;
+  $("#harnessOut").innerHTML = '<div class="empty">Not run yet.</div>';
+  document.querySelectorAll(".step[data-step]").forEach(b=>b.classList.remove("done"));
+  showStep(1); render();
+};
+$("#btnHarness").onclick = () => {
+  const r = runHarness();
+  const pass = r.summary.failed === 0;
+  const rows = r.scenarios.flatMap(s => s.checks.map(c =>
+    `<div class="chk ${c.passed?"pass":"fail"}">
+       <span class="id">${c.id}</span>
+       <span>${c.description}<span class="exp">expected ${JSON.stringify(c.expected)} · got ${JSON.stringify(c.actual)}</span></span>
+       <span class="res">${c.passed?"PASS":"FAIL"}</span>
+     </div>`)).join("");
+  $("#harnessOut").innerHTML = `
+    <div class="verdict ${pass?"pass":"fail"}">
+      <b>${pass?"PASS":"FAIL"}</b>
+      <span>${r.summary.passed} / ${r.summary.total} checks passed</span>
+      <span style="margin-left:auto;color:var(--muted);font-size:12px">break mode: ${breakMode}</span>
+    </div>
+    <div class="checks" style="margin-top:10px">${rows}</div>
+    <p class="mr" style="color:var(--muted);font-size:12.5px">
+      हाच तो report — प्रत्येक ओळ एक तपासणी: expected (काय हवं होतं) vs actual (काय मिळालं).
+    </p>`;
+  render();
+};
+
+showStep(1); render();
+</script>
+</body>
+</html>

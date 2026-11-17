@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PMS Practice Rig — the whole system, visible</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
+    --ink:#e6e9ef; --muted:#98a1b3; --accent:#4f8cff; --ok:#38b27a;
+    --bad:#e05561; --warn:#e0a84e; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{display:flex;align-items:center;gap:16px;padding:14px 20px;
+         border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+  header h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.2px}
+  header .sub{color:var(--muted);font-size:12px}
+  .pill{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  main{display:grid;grid-template-columns:260px 1fr;gap:0;min-height:calc(100vh - 57px)}
+  nav{border-right:1px solid var(--line);background:var(--panel);padding:16px 12px;
+      position:sticky;top:0;height:calc(100vh - 57px);overflow:auto}
+  nav h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+         margin:0 0 10px 6px;font-weight:600}
+  .step{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;
+        color:var(--ink);padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;font-size:13px}
+  .step:hover{background:var(--panel2)}
+  .step.done{border-color:var(--ok);background:rgba(56,178,122,.08)}
+  .step.done .n{background:var(--ok);color:#08110c}
+  .step .n{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--line);
+           text-align:center;font-size:11px;line-height:18px;margin-right:8px;font-family:var(--mono)}
+  .step small{display:block;color:var(--muted);font-size:11px;margin-left:26px}
+  section{padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .card h3{margin:0 0 6px;font-size:13px;font-weight:600}
+  .card .why{color:var(--muted);font-size:12px;margin-bottom:12px}
+  .explain{background:linear-gradient(180deg,var(--panel2),var(--panel));border-left:3px solid var(--accent)}
+  .explain .mr{margin:8px 0 0;color:#cfd6e4;font-size:13px}
+  code{font-family:var(--mono);font-size:12px;background:#0b0d11;padding:2px 6px;border-radius:5px;
+       border:1px solid var(--line)}
+  pre{margin:10px 0 0;background:#0b0d11;border:1px solid var(--line);border-radius:8px;padding:12px;
+      overflow:auto;font-family:var(--mono);font-size:12px;line-height:1.55;max-height:340px}
+  .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;
+     letter-spacing:.06em;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:6px 8px;border-bottom:1px solid rgba(42,47,58,.6);font-family:var(--mono);font-size:11.5px;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+  tr.flash td{animation:flash 1.6s ease-out}
+  @keyframes flash{0%{background:rgba(79,140,255,.35)}100%{background:transparent}}
+  .badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10.5px;font-family:var(--mono)}
+  .ACTIVE,.A,.OK{background:rgba(56,178,122,.16);color:#6fdcae;border:1px solid rgba(56,178,122,.4)}
+  .REVOKED,.I{background:rgba(224,85,97,.16);color:#ff9aa2;border:1px solid rgba(224,85,97,.4)}
+  .empty{color:var(--muted);font-size:12px;padding:14px 8px;font-style:italic}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button.act{background:var(--accent);color:#06101f;border:0;border-radius:8px;padding:9px 14px;
+             font-weight:600;font-size:13px;cursor:pointer}
+  button.act:hover{filter:brightness(1.1)}
+  button.act:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  select{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+         padding:8px 10px;font-size:13px}
+  .verdict{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:9px;
+           border:1px solid var(--line);background:var(--panel2)}
+  .verdict.pass{border-color:rgba(56,178,122,.5);background:rgba(56,178,122,.08)}
+  .verdict.fail{border-color:rgba(224,85,97,.5);background:rgba(224,85,97,.08)}
+  .verdict b{font-size:20px;letter-spacing:.04em}
+  .checks{max-height:280px;overflow:auto}
+  .chk{display:grid;grid-template-columns:70px 1fr 90px;gap:10px;padding:5px 0;
+       border-bottom:1px solid rgba(42,47,58,.5);font-size:12px;align-items:center}
+  .chk .id{font-family:var(--mono);color:var(--muted);font-size:11px}
+  .chk .res{text-align:right;font-family:var(--mono);font-size:11px}
+  .chk.pass .res{color:var(--ok)} .chk.fail .res{color:var(--bad);font-weight:700}
+  .chk .exp{display:block;color:var(--muted);font-size:10.5px;font-family:var(--mono)}
+  .hint{color:var(--muted);font-size:12px;margin-top:10px}
+  .toast{position:fixed;right:18px;bottom:18px;background:var(--panel2);border:1px solid var(--line);
+         border-radius:9px;padding:12px 16px;font-size:12.5px;max-width:380px;opacity:0;
+         transform:translateY(8px);transition:.2s;pointer-events:none;z-index:9}
+  .toast.show{opacity:1;transform:none}
+  .toast.err{border-color:rgba(224,85,97,.5)}
+  @media(max-width:900px){main{grid-template-columns:1fr}nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>PMS Practice Rig</h1>
+  <span class="sub">fake hotel PMS → fake Dwarpaal → 3 tables → harness → report</span>
+  <span class="pill"><span class="dot"></span><span id="modeLabel">break mode: none</span></span>
+</header>
+
+<main>
+  <nav>
+    <h2>Guided tour</h2>
+    <button class="step" data-step="1"><span class="n">1</span>Create a booking<small>one event → one auth row</small></button>
+    <button class="step" data-step="2"><span class="n">2</span>Guest checks in<small>access becomes usable</small></button>
+    <button class="step" data-step="3"><span class="n">3</span>Room 204 → 210<small>old key must die</small></button>
+    <button class="step" data-step="4"><span class="n">4</span>Guest checks out<small>every key revoked</small></button>
+    <button class="step" data-step="5"><span class="n">5</span>notify = false<small>negative case</small></button>
+    <button class="step" data-step="6"><span class="n">6</span>Send it twice<small>idempotency</small></button>
+
+    <h2 style="margin-top:18px">Tools</h2>
+    <button class="step" id="btnHarness"><span class="n">▶</span>Run the harness<small>all checks, then report</small></button>
+    <button class="step" id="btnReset"><span class="n">↺</span>Reset tables<small>start clean</small></button>
+
+    <h2 style="margin-top:18px">Break it on purpose</h2>
+    <select id="breakSelect" style="width:100%"></select>
+    <p class="hint">Inject one real-world bug, then run a step or the harness and watch which check goes red.</p>
+  </nav>
+
+  <section>
+    <div class="card explain" id="explainCard">
+      <h3 id="explainTitle">Start here</h3>
+      <div class="why" id="explainWhy">Click a numbered step on the left. Each one is a single PMS event.</div>
+      <p class="mr" id="explainMr">
+        डावीकडून 1, 2, 3… या क्रमाने जा. प्रत्येक पायरी = खऱ्या जगातली एक घटना.
+        खाली डावीकडे खरे tables आहेत — नोंदी येताना डोळ्यांनी बघ.
+      </p>
+      <div class="controls" style="margin-top:14px">
+        <button class="act" id="btnRunStep">Run this step</button>
+        <button class="act ghost" id="btnNext">Next step →</button>
+        <span class="hint" id="stepHint"></span>
+      </div>
+      <pre id="trace" hidden></pre>
+    </div>
+
+    <div class="tables">
+      <div class="card">
+        <h3>Events received</h3>
+        <div class="why">What the PMS sent us. This table does not exist in the real system; it is here so you can see the input.</div>
+        <div id="tblEvents"></div>
+      </div>
+      <div class="card">
+        <h3>DP_AUTH_ENTRY</h3>
+        <div class="why">Who is authorised, for which booking, which room, which dates.</div>
+        <div id="tblAuth"></div>
+      </div>
+      <div class="card">
+        <h3>DP_AUTH_DEVICE_CHARS</h3>
+        <div class="why">Which keycode sits on which lock. ACTIVE = works, REVOKED = dead.</div>
+        <div id="tblChars"></div>
+      </div>
+      <div class="card">
+        <h3>DP_COMMUNICATION_LOG</h3>
+        <div class="why">What the guest was told. Zero rows here is a correct result when notify=false.</div>
+        <div id="tblComms"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Harness result</h3>
+      <div class="why">The same events, replayed by the harness, then checked one assertion at a time.</div>
+      <div id="harnessOut"><div class="empty">Not run yet. Press “Run the harness”.</div></div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STEPS = {
+  1:{title:"1 — Reservation created", why:"The PMS tells Dwarpaal a booking exists. Expect: one row in DP_AUTH_ENTRY, one ACTIVE key in DP_AUTH_DEVICE_CHARS, and SMS+EMAIL rows.",
+     mr:"बुकिंग तयार झाली. अपेक्षा: auth entry एक, ACTIVE key एक, आणि SMS+EMAIL दोन नोंदी."},
+  2:{title:"2 — Guest checks in", why:"The receptionist marks the guest as arrived. The booking already existed, so this must not create a second key.",
+     mr:"पाहुणा आला. बुकिंग आधीच होती, म्हणून दुसरी key तयार होऊ नये — फक्त आधीचीच चालू राहावी."},
+  3:{title:"3 — Room changed 204 → 210", why:"The single most important behaviour in this project. The old room's key must be REVOKED and a new one placed on the new room's lock.",
+     mr:"हाच सर्वात महत्त्वाचा भाग. जुन्या खोलीची key REVOKED झाली पाहिजे आणि नव्या खोलीवर नवी key बसली पाहिजे."},
+  4:{title:"4 — Guest checks out", why:"Access ends. DP_AUTH_ENTRY goes to status I and every remaining key must be REVOKED.",
+     mr:"मुक्काम संपला. auth entry I होते आणि उरलेली प्रत्येक key REVOKED झाली पाहिजे."},
+  5:{title:"5 — notify = false", why:"Access is still granted, but the guest must not be contacted. DP_COMMUNICATION_LOG must stay empty.",
+     mr:"access मिळेल, पण पाहुण्याला काही कळवू नये. त्यामुळे communication log रिकामा राहिला पाहिजे."},
+  6:{title:"6 — The same event, sent twice", why:"Kafka is at-least-once, so duplicates are normal. A replay must not issue a second key or double the notifications.",
+     mr:"Kafka मध्ये तोच message दोनदा येऊ शकतो. पुन्हा आला तर दुसरी key किंवा जास्तीचे message होऊ नयेत."}
+};
+const BADGE = v => `<span class="badge ${v}">${v}</span>`;
+let current = 1, busy = false, lastRun = null;
+
+const $ = s => document.querySelector(s);
+const toast = (msg, err=false) => {
+  const t = $("#toast"); t.textContent = msg; t.className = "toast show" + (err?" err":"");
+  clearTimeout(t._t); t._t = setTimeout(()=>t.className="toast", 4200);
+};
+
+async function api(path, opts={}) {
+  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, ...opts});
+  const j = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(j.error?.message || ("HTTP "+r.status));
+  return j;
+}
+
+function table(rows, cols, badgeCols=[]) {
+  if (!rows.length) return `<div class="empty">no rows</div>`;
+  const head = cols.map(c=>`<th>${c}</th>`).join("");
+  const body = rows.map(r=>`<tr>`+cols.map(c=>{
+    const v = r[c] ?? "";
+    return `<td>${badgeCols.includes(c)?BADGE(v):String(v).replace(/</g,"&lt;")}</td>`;
+  }).join("")+`</tr>`).join("");
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function flashNew(prev, next, idKey) {
+  const seen = new Set(prev.map(r=>r[idKey]));
+  return next.map(r => seen.has(r[idKey]) ? r : {...r, _new:true});
+}
+
+async function refresh() {
+  const s = await api("/api/state");
+  $("#modeLabel").textContent = "break mode: " + (s.break_mode ? s.break_description : "none");
+
+  const t = s.tables;
+  $("#tblEvents").innerHTML = table(t.RIG_EVENTS, ["EVENT_TYPE","BOOKING_ID","NOTIFY","RECEIVED_AT"]);
+  $("#tblAuth").innerHTML   = table(t.DP_AUTH_ENTRY, ["AUTH_ID","EXT_EVENT_ID","ROOM_NUMBER","AUTH_STATUS","ARRIVAL_DATE"], ["AUTH_STATUS"]);
+  $("#tblChars").innerHTML  = table(t.DP_AUTH_DEVICE_CHARS, ["DEVICE_ID","DEVICE_CHAR","CHAR_STATUS"], ["CHAR_STATUS"]);
+  $("#tblComms").innerHTML  = table(t.DP_COMMUNICATION_LOG, ["CHANNEL","RECIPIENT","EVENT_TYPE"], []);
+
+  const sel = $("#breakSelect");
+  const wanted = s.break_modes.map(m=>`<option value="${m.mode||"none"}">${m.description}</option>`).join("");
+  if (sel.dataset.sig !== wanted) {
+    sel.innerHTML = wanted;
+    sel.dataset.sig = wanted;
+    sel.value = s.break_mode || "none";
+  }
+  return s;
+}
+
+function showStep(n) {
+  current = n;
+  const s = STEPS[n];
+  $("#explainTitle").textContent = s.title;
+  $("#explainWhy").textContent = s.why;
+  $("#explainMr").textContent = s.mr;
+  $("#stepHint").textContent = n < 6 ? "Next: " + STEPS[n+1].title : "Tour finished";
+  document.querySelectorAll(".step[data-step]").forEach(b=>
+    b.classList.toggle("done", Number(b.dataset.step) < n));
+}
+
+async function runStep(n) {
+  if (busy) return; busy = true; $("#btnRunStep").disabled = true;
+  try {
+    const before = (await api("/api/state")).tables;
+    const res = await api(`/api/tour?step=${n}`, {method:"POST"});
+    const after = await refresh();
+    // highlight rows that just appeared
+    ["DP_AUTH_ENTRY","DP_AUTH_DEVICE_CHARS","DP_COMMUNICATION_LOG"].forEach(k=>{
+      const idk = k==="DP_AUTH_ENTRY" ? "AUTH_ID" : "ID";
+      const fresh = flashNew(before[k], after.tables[k], idk);
+      if (fresh.some(r=>r._new)) {
+        // re-render with a flash class by rebuilding quickly
+        const el = {DP_AUTH_ENTRY:"#tblAuth", DP_AUTH_DEVICE_CHARS:"#tblChars", DP_COMMUNICATION_LOG:"#tblComms"}[k];
+        const cols = {DP_AUTH_ENTRY:["AUTH_ID","EXT_EVENT_ID","ROOM_NUMBER","AUTH_STATUS","ARRIVAL_DATE"],
+                      DP_AUTH_DEVICE_CHARS:["DEVICE_ID","DEVICE_CHAR","CHAR_STATUS"],
+                      DP_COMMUNICATION_LOG:["CHANNEL","RECIPIENT","EVENT_TYPE"]}[k];
+        const badges = k==="DP_AUTH_ENTRY"?["AUTH_STATUS"]:k==="DP_AUTH_DEVICE_CHARS"?["CHAR_STATUS"]:[];
+        $(el).innerHTML = table(fresh, cols, badges);
+        $(el).querySelectorAll("tbody tr").forEach((tr,i)=>{ if (fresh[i]?._new) tr.classList.add("flash"); });
+      }
+    });
+    const lines = res.results.map(r => {
+      if (r.error) return `${r.label}: HTTP ${r.status} — ${r.error.code}\n   ${r.error.message}`;
+      return `${r.label}: HTTP ${r.status} — ${r.body.result}\n   ` + (r.trace||[]).join("\n   ");
+    }).join("\n");
+    const pre = $("#trace"); pre.hidden = false; pre.textContent = lines;
+    showStep(Math.min(n+1, 6));
+  } catch(e) { toast(e.message, true); }
+  finally { busy = false; $("#btnRunStep").disabled = false; }
+}
+
+async function runHarness() {
+  if (busy) return; busy = true; $("#btnHarness").disabled = true;
+  $("#harnessOut").innerHTML = `<div class="empty">running…</div>`;
+  try {
+    const r = await api("/api/run-harness", {method:"POST"});
+    lastRun = r;
+    const sm = r.summary;
+    const pass = sm.failed === 0;
+    const rows = r.scenarios.flatMap(sc => sc.checks.map(c =>
+      `<div class="chk ${c.passed?"pass":"fail"}">
+         <span class="id">${c.id}</span>
+         <span>${c.description}<span class="exp">expected ${JSON.stringify(c.expected)} · got ${JSON.stringify(c.actual)}</span></span>
+         <span class="res">${c.passed?"PASS":"FAIL"}</span>
+       </div>`)).join("");
+    $("#harnessOut").innerHTML = `
+      <div class="verdict ${pass?"pass":"fail"}">
+        <b>${pass?"PASS":"FAIL"}</b>
+        <span>${sm.passed} / ${sm.total} checks passed</span>
+        <span style="margin-left:auto;color:var(--muted);font-size:12px">run ${r.run_id}</span>
+      </div>
+      <div class="checks" style="margin-top:12px">${rows}</div>
+      <p class="mr" style="color:var(--muted);font-size:12.5px;margin-top:12px">
+        हाच तो report — प्रत्येक ओळ एक तपासणी. expected vs actual म्हणजे नक्की काय हवं होतं आणि प्रत्यक्षात काय मिळालं.
+      </p>`;
+    await refresh();
+  } catch(e) { toast(e.message, true); $("#harnessOut").innerHTML = `<div class="empty">${e.message}</div>`; }
+  finally { busy = false; $("#btnHarness").disabled = false; }
+}
+
+document.querySelectorAll(".step[data-step]").forEach(b=>{
+  b.onclick = () => { showStep(Number(b.dataset.step)); runStep(Number(b.dataset.step)); };
+});
+$("#btnRunStep").onclick = () => runStep(current);
+$("#btnNext").onclick = () => { showStep(current); runStep(current); };
+$("#btnHarness").onclick = runHarness;
+$("#btnReset").onclick = async () => { await api("/api/reset", {method:"POST"}); $("#trace").hidden=true; $("#harnessOut").innerHTML='<div class="empty">Not run yet.</div>'; document.querySelectorAll(".step[data-step]").forEach(b=>b.classList.remove("done")); showStep(1); await refresh(); toast("tables cleared"); };
+$("#breakSelect").onchange = async e => {
+  const mode = e.target.value;
+  await api("/api/break?mode="+encodeURIComponent(mode), {method:"POST"});
+  toast(mode === "none" ? "break mode off" : "break mode: " + mode);
+  await refresh();
+};
+
+showStep(1);
+refresh().catch(e=>toast(e.message,true));
+setInterval(()=>{ if(!busy) refresh().catch(()=>{}); }, 4000);
+</script>
+</body>
+</html>
